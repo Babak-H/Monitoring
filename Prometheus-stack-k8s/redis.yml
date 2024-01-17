@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-cart
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: redis-cart
+  template:
+    metadata:
+      labels:
+        app: redis-cart
+    spec:
+      volumes:
+      - name: redis-data
+        emptyDir:
+          sizeLimit: 500Mi
+      containers:
+      - name: redis
+        image: redis:alpine
+        ports:
+        - containerPort: 6379
+
+        # redis is a memory-based program, so we give it more memory and less cpu to use
+        resources:
+          requests:
+            cpu: 50m
+            memory: 200Mi
+          limits:
+            cpu: 100m
+            memory: 400Mi
+
+        livenessProbe:
+          initialDelaySeconds: 20
+          periodSeconds: 30
+          # instead of executing health/readiness probe commands we can open tcp socket port for health checkup
+          tcpSocket:
+            port: 6379
+
+        readinessProbe:
+          initialDelaySeconds: 20
+          periodSeconds: 30
+          # instead of executing health/readiness probe commands we can open tcp socket port for health checkup
+          tcpSocket:
+            port: 6379
+
+        volumeMounts:
+        - name: redis-data
+        # this is the default location where redis will save the data
+          mountPath: /data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-cart
+spec:
+  type: ClusterIP
+  selector:
+    app: redis-cart
+  ports:
+  - protocol: TCP
+    port: 6379
+    targetPort: 6379

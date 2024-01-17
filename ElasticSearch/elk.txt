@@ -1,0 +1,69 @@
+OpenSearch (ElasticSearch) on AWS
+
+** First click create a domain
+Domain name: string
+Deployment type: production / development and testing / custom
+Version: openSearch’s version, use latest
+Availability zones: 3-AZ / 2-AZ / 1-AZ
+Instance type:  example => t3.small.search
+Number of nodes: 1 to 10
+Storage type (for data nodes): EBS or EFS
+EBS volume type: gp3 ssd or gp2 ssd
+Dedicated master node: boolean
+Network access: public access / VPC access (only can be accessed within your vpc)
+Fine grained access-control: enable/disable
+Access policy: Only use fine-grained access control/Do not set domain level access policy/Configure domain level access policy
+
+** takes around 15 mins to create the cluster
+
+
+**** how to reboot a elasticsearch cluster ****
+
+a. allow primaries allocation:
+    PUT _cluster/settings
+        {
+        "persistent": {
+            "cluster.routing.allocation.enable": "primaries"
+        }
+    }
+
+b. reboot from the server's machine (via ssh):  sudo reboot
+
+c. make sure elasticsearch is running: 
+    $ service elasticsearch status  / service elasticsearch start
+
+c. revert back allocation changes:
+    PUT _cluster/settings
+        {
+        "persistent": {
+            "cluster.routing.allocation.enable": null
+        }
+    }
+
+show all kibana nodes:
+GET _cat/nodes
+
+GET _cat/indices?v
+
+
+- node exporter:
+$ curl <NODE_NAME>:14300/metrics | grep -v '#' | grep cpu
+
+- node exporter metrics:
+$ curl <NODE_NAME>:9114/metrics | grep -v '#'
+
+-  GREP => -v, --invert-match, select non-matching lines
+
+$ /etc/systemd/system/node_exporter.service
+$ /etc/systemd/system/elasticsearch_exporter.servicec
+$ /etc/grafana-agent.yaml 
+
+
+***** to see how different elasticsearch service work *****
+$ service elasticsearch status
+$ service elasticsearch_exporter status
+$ service grafana-agent status
+$ service node_exporter status
+
+$ systemctl daemon-reload
+$ systemctl restart kibana

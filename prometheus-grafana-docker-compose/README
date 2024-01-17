@@ -1,0 +1,6 @@
+inside the host machine:
+    sudo mkdir /etc/prometheus
+    vi /etc/prometheus/prometheus.yml
+
+paste the content from our /config/prometheus.yml to here
+

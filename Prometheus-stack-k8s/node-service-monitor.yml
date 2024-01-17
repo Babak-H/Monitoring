@@ -1,0 +1,27 @@
+apiVersion: monitoring.coreos.com/v1
+# here we are creating a CRD of kind "ServiceMonitor" so that prometheus can read metrics from our NodeJS application
+kind: ServiceMonitor
+metadata:
+  # custom name for ServiceMonitor resource
+  name: monitoring-node-app
+  labels:
+    # name of the prom cluster is monitoring
+    release: monitoring
+    # name of the nodejs app
+    app: nodeapp
+spec:
+  endpoints:
+    # endpoint to scrape
+  - path: /metrics
+    # this is "Name" of the nodejs service's port (you can name the port)
+    port: service
+    # port number of the nodejs service
+    targetPort: 3000
+  # promethes should find the application inside the default namespace
+  namespaceSelector:
+    matchNames:
+    - default
+  selector:
+    matchLabels:
+      # select the app in default namespace that has the label "app" set to "nodeapp"
+      app: nodeapp

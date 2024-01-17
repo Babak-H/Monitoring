@@ -1,0 +1,6 @@
+elasticsearchHosts: "https://elasticsearch-master:9200"
+enterpriseSearch:
+  host: "https://elasticsearch-master:9200"
+
+# helm install kibana -f kibana-values.yml stable/kibana
+# port forward container's port to local port for accessing it

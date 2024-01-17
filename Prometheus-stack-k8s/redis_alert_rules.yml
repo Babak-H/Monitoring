@@ -1,0 +1,33 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata: 
+  name: redis-rules
+  # no need to mention namespace, since it runs in default namespace (where redis is running)
+  labels:
+    # since prometheus is in monitoring namespace, we should keep these labels to match it with prom stack
+    app: kube-prometheus-stack
+    release: monitoring
+spec:
+  groups: 
+  - name: redis.rules
+    rules:
+
+    # trigger critical alert immediately when redis server goes down
+    - alert: RedisDown
+      expr: redis_up == 0
+      for: 0m
+      labels:
+        severity: critical
+      annotations:
+        summary: Redis down (instance {{ $labels.instance }})
+        description: "Redis instance is down\n REDIS_DOWN = {{ $value }}\n LABELS = {{ $labels }}"
+
+    - alert: RedisTooManyConnections
+      # when more than 25 separate connections have been made to redis, for a period of 2 minutes, create a warning alert
+      expr: redis_connected_clients > 100
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: Redis has too many connections (instance {{ $labels.instance }})
+        description: "Redis has too many connections\n CONNECTIONS_NUMBER = {{ $value }}\n LABELS = {{ $labels }}"

@@ -1,0 +1,11 @@
+# this is NOT a ServiceMonitor crd, its just key-value pair for the helm chart
+
+# service monitor is the link between exporter and prometheus application
+# for prom to scrape redis endpoint, serviceMonitor should be enabled.
+serviceMonitor:
+  enabled: true
+  labels:
+  # with label, associate the values with the monitoring cluster (prometheus cluster is located there)
+    release: monitoring
+# redis-cart => name of the redis svc, 6379 => exposed port for redis svc
+redisAddress: redis://redis-cart:6379

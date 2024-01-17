@@ -1,0 +1,59 @@
+---
+version: '3'
+
+
+volumes:
+# keep prometheus and grafana data in these volumes, this is where we keep the metrics
+  prometheus-data:
+    # setting driver to local, means that data will be saved on the host machine
+    driver: local
+  grafana-data:
+    driver: local
+
+
+services:
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    # map port 9000 from container to port 9000 on host machine
+    ports:
+      # its NOT encrypted
+      - "9000:9000"
+    volumes:
+      # we keep the prometheus config files in /etc/prom on host machine and then copy them to /config folder of the container
+      - /etc/prometheus:/config
+      # maps 'prometheus-data' volume to a folder named /prometheus inside the container, to store the metrics
+      - prometheus-data:/prometheus
+    restart: unless-stopped
+    command:
+      - "--config.file=/config/prometheus.yml"
+
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    # access grafana webUI on host machine's port 3000
+    ports:
+      - "3000:3000"
+    volumes:
+      # save grafana metrics data in /var/lib/grafana inside the container
+      - grafana-data:/var/lib/grafana
+    restart: unless-stopped
+
+
+  # we setup node_exporter so that the prometheus can read machine metrics from the computer that is hosting the docker
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:v1.5.0
+    container_name: node_exporter
+    # sets the Process id (pid) mode for the container to "host" When the PID mode is set to "host," the container shares the same PID namespace as the host system
+    # allowing it to access and monitor all processes on the host.
+    pid: host
+    restart: unless-stopped
+    volumes:
+    # set root / directory of the host system to /host folder in the container
+    # "ro" => only allow it to be in read-only mode
+    # "rslave" => changes made on the host are reflected inside the container
+      - /:/host:ro,rslave
+    # 'path.rootfs' tells node-exporter to scrape metrics from the '/host' path
+    command: "--path.rootfs=/host"

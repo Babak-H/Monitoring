@@ -1,0 +1,43 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+# this is the type of the CRD that applies to alertmanager
+kind: AlertmanagerConfig
+metadata:
+  name: main-rules-alert-config
+  # apply it to the monitoring namespace only
+  namespace: monitoring
+
+spec:
+  route:
+    # this is the receiver type of the alerts (created below)
+    receiver: 'email'
+    # in case of the alert error persisting, re-send the email after 30 minutes
+    repeatInterval: 30m
+    
+    routes:
+    # here we mention all the alert rules that we want to be sent, they should be already created
+    - matcher:
+      - name: alertname
+        value: HostingHighCpuLoad
+
+    - matcher:
+      - name: alertname
+        value: KubernetesPodCrashLooping
+      # for this alert rule, override the repeatInterval and send it every 10 minutes
+      repeatInterval: 10m
+
+  receivers:
+  # this is name of this receiver
+  - name: 'email'
+    emailConfigs:
+      # email address of sender and reciever
+    - to: 'target@example.com'
+      from: 'sender@example.com'
+      # here we use google smtp to send emails, but it can be other email sender apps
+      smarthost: 'smtp.gmail.com:587'
+      # email address of sender as username and identity
+      authUsername: 'sender@example.com'
+      authIdentity: 'sender@example.com'
+      # we get the password for the sender email, from the Secret file (create a kubernetes secret for it)
+      authPassword:
+        name: gmail-auth
+        key: password
